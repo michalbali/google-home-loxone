@@ -3,21 +3,22 @@ import { CapabilityHandler } from '../capabilities/capability-handler';
 import { TemperatureSetting, TemperatureSettingHandler, TemperatureState } from '../capabilities/temperature-setting';
 import { ComponentRaw } from '../config';
 import { LoxoneRequest } from '../loxone-request';
-import { Component } from './component';
+import { Component, ComponentType } from './component';
 import { OnOff, OnOffHandler } from '../capabilities/on-off';
 import { ErrorType } from '../error';
+import { Log } from '../log';
 
 export class AirCoolerComponent extends Component implements OnOff, TemperatureSetting {
   private on: boolean;
   protected temperatureState: TemperatureState = new TemperatureState();
 
   constructor(rawComponent: ComponentRaw, loxoneRequest: LoxoneRequest, statesEvents: Subject<Component>) {
-    super(rawComponent, loxoneRequest, statesEvents);
+    super(rawComponent, ComponentType.AIRCOOLER, loxoneRequest, statesEvents);
 
     this.loxoneRequest.getControlInformation(this.loxoneId).subscribe(temperature => {
       this.loxoneRequest.watchComponent(temperature.states.temperature).subscribe((event) => {
         if(event === 0) {
-          console.log('Ambient temperature not managed by the airconditionner, try to find a a sensor in the same room.');
+          Log.info('Ambient temperature not managed by the airconditionner, try to find a a sensor in the same room.');
           // TODO : unsubscribe the current event
           // TODO : find in the same room a temperature sensor
         }

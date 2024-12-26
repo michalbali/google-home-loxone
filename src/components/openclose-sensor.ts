@@ -5,19 +5,20 @@ import { OpenClose, OpenCloseAttributes, OpenCloseHandler } from '../capabilitie
 import { ComponentRaw } from '../config';
 import { ErrorType } from '../error';
 import { LoxoneRequest } from '../loxone-request';
-import { Component } from './component';
+import { Component, ComponentType } from './component';
+import { Log } from '../log';
 
 export class OpenCloseSensorComponent extends Component implements OpenClose {
     protected statePos: number;
     protected isOpen: boolean;
 
     constructor(rawComponent: ComponentRaw, loxoneRequest: LoxoneRequest, statesEvents: Subject<Component>) {
-        super(rawComponent, loxoneRequest, statesEvents);
+        super(rawComponent, ComponentType.SENSOR, loxoneRequest, statesEvents);
 
         this.loxoneRequest.getControlInformation(this.loxoneId).subscribe(jalousie => {
             this.loxoneRequest.watchComponent(jalousie['states']['numOpen']).subscribe(event => {
                 // TODO Listen for open & send event
-                console.log('Watch numOpen of Sensor component', event);
+                Log.info('Watch numOpen of Sensor component', event);
                 this.statePos = 100;
                 this.isOpen = true;
                 this.statesEvents.next(this);
@@ -25,7 +26,7 @@ export class OpenCloseSensorComponent extends Component implements OpenClose {
 
             this.loxoneRequest.watchComponent(jalousie['states']['numClosed']).subscribe(event => {
                 // TODO Listen for close & send event
-                console.log('Watch numClosed of Sensor component', event);
+                Log.info('Watch numClosed of Sensor component', event);
                 this.statePos = 100;
                 this.isOpen = false;
                 this.statesEvents.next(this);
@@ -52,10 +53,6 @@ export class OpenCloseSensorComponent extends Component implements OpenClose {
         return of(this.statePos);
     }
 
-    getOpenDirection(): Observable<string> {
-        return of(this.isOpen ? 'OUT' : 'IN');
-    }
-
     getAttributes(): OpenCloseAttributes {
         return {
             openDirection: [
@@ -73,5 +70,13 @@ export class OpenCloseSensorComponent extends Component implements OpenClose {
 
     protected stop(): Observable<boolean> {
         throw new Error(ErrorType.NOT_SUPPORTED_IN_CURRENT_MODE);
+    }
+
+    isDiscreteOnlyOpenClose(): boolean {
+        return true;
+    }
+
+    isAcknowledgementNeeded(): boolean {
+        return false;
     }
 }

@@ -1,11 +1,12 @@
 import { Observable, forkJoin, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, mergeMap, switchMap } from 'rxjs/operators';
 import { ErrorType } from '../error';
 import { Capability, CapabilityHandler } from './capability-handler';
+import { Log } from '../log';
 
 export class OpenCloseAttributes {
     discreteOnlyOpenClose?: boolean;
-    openDirection?: Array<'UP' | 'DOWN' | 'LEFT' | 'RIGHT' | 'IN' | 'OUT'>;
+    openDirection?: Array<'UP' | 'DOWN' | 'LEFT' | 'RIGHT' | 'IN' | 'OUT'>;
     commandOnlyOpenClose?: boolean;
     queryOnlyOpenClose?: boolean;
 }
@@ -19,16 +20,16 @@ export interface OpenClose extends Capability {
 
     setPosition(percent: number): Observable<boolean>;
 
-    getOpenDirection(): Observable<string>;
+    isDiscreteOnlyOpenClose(): boolean;
 
-    getAttributes(): OpenCloseAttributes;
+    isAcknowledgementNeeded(): boolean;
 }
 
 export class OpenCloseHandler implements CapabilityHandler<OpenClose> {
     public static INSTANCE = new OpenCloseHandler();
 
     getCommands(): string[] {
-        return ['action.devices.commands.OpenClose'];
+        return ['action.devices.commands.OpenClose'/*, 'action.devices.commands.OpenCloseRelative'*/];
     }
 
     getTrait(): string {
@@ -36,40 +37,69 @@ export class OpenCloseHandler implements CapabilityHandler<OpenClose> {
     }
 
     getAttributes(component: OpenClose): OpenCloseAttributes {
-        return component.getAttributes();
+        return {
+            queryOnlyOpenClose: false,
+            discreteOnlyOpenClose: component.isDiscreteOnlyOpenClose()
+        };
     }
 
     getState(component: OpenClose): Observable<any> {
-        return forkJoin([
-            component.getPosition(),
-            component.getOpenDirection(),
-        ]).pipe(map(resp => {
-            return {
-                openState: [{
-                    openPercent: resp[0],
-                    openDirection: resp[1]
-                }]
-            };
-        }));
+        return component.getPosition().pipe(
+            map(result => {
+                return {
+                    openPercent: result
+                }
+            })
+        );
     }
 
-    handleCommands(component: OpenClose, command: string, payload?: any): Observable<boolean> {
+    handleCommands(component: OpenClose, command: string, payload?: any, challenge?: any): Observable<boolean> {
         if (this.getAttributes(component)?.queryOnlyOpenClose) {
-            console.error('Component with queryOnlyOpenClose attribute can not be commanded');
+            Log.error('Component with queryOnlyOpenClose attribute can not be commanded');
             throw new Error(ErrorType.NOT_SUPPORTED_IN_CURRENT_MODE);
         }
 
-        const percent = payload['openPercent'];
+        if (component.isAcknowledgementNeeded() && !challenge?.ack) {
+            throw new Error(ErrorType.CHALLENGE_NEEDED_ACK);
+        }
 
+        switch (command) {
+            case 'action.devices.commands.OpenClose':
+                return this.handleOpenClose(component, payload);
+            // case 'action.devices.commands.OpenCloseRelative':
+            //     return this.handleOpenCloseRelative(component, payload);
+            default:
+                Log.error('Command is not supported', command);
+                return of(false);
+        }
+    }
+
+    private handleOpenClose(component: OpenClose, payload: any): Observable<boolean> {
+        const percent = payload['openPercent'];
         if (percent === 0) {
             return component.close()
         } else if (percent === 100) {
             return component.open();
         } else if (percent > 0 && percent < 100) {
-            return component.setPosition(+percent);
+            return component.setPosition(percent);
         } else {
-            console.error('Error during moving blind', component, payload);
+            Log.error('Error during moving blind', component, payload);
             of(false);
         }
     }
+
+    // private handleOpenCloseRelative(component: OpenClose, payload: any): Observable<boolean> {
+    //     return component.getPosition().pipe(
+    //         switchMap((openPercent) => {
+    //             const newOpenPercent = openPercent + payload['openRelativePercent'];
+    //             if (newOpenPercent < 0) {
+    //                 return component.close();
+    //             } else if (newOpenPercent > 100) {
+    //                 return component.open();
+    //             } else {
+    //                 return component.setPosition(newOpenPercent);
+    //             }
+    //         })
+    //     );
+    // }
 }

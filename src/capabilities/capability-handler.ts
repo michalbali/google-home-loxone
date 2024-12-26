@@ -5,6 +5,7 @@ import { OnOffHandler } from './on-off';
 import { OpenCloseHandler } from './open-close';
 import { TemperatureControlHandler } from './temperature-control';
 import { TemperatureSettingHandler } from './temperature-setting';
+import { RotationHandler } from './rotation';
 
 /* tslint:disable no-empty-interface */
 export interface Capability {
@@ -19,7 +20,7 @@ export interface CapabilityHandler<T extends Capability> {
 
   getState(component: T): Observable<any>;
 
-  handleCommands(component: T, command: string, params?: any): Observable<boolean>;
+  handleCommands(component: T, command: string, params?: any, challenge?: any): Observable<boolean>;
 }
 
 export class Handlers {
@@ -33,7 +34,8 @@ export class Handlers {
       EndpointHealthHandler.INSTANCE,
       TemperatureControlHandler.INSTANCE,
       TemperatureSettingHandler.INSTANCE,
-      OpenCloseHandler.INSTANCE
+      OpenCloseHandler.INSTANCE,
+      RotationHandler.INSTANCE
     ];
 
     this.handlers.forEach(handler => {

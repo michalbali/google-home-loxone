@@ -15,6 +15,15 @@
             "defaultRating": 0,
             "isFavorite": false,
             "type": 1
+        },
+        "09fec58a-03cf-001b-0f00000000000000": {
+            "uuid": "09fec58a-03cf-001b-0f00000000000000",
+            "name": "Living room",
+            "image": "IconsFilled/sofa-1.svg",
+            "defaultRating": 5,
+            "isFavorite": true,
+            "type": 2,
+            "color": "#69C350"
         }
     },
     "controls": {
@@ -178,6 +187,201 @@
                 "override": "1b70c2cf-020d-94f1-ffffe0e20d696b15",
                 "pauseUntil": "1b70c2cf-020d-94f2-ffffe0e20d696b15",
                 "pauseReason": "1b70c2cf-020d-94f3-ffffe0e20d696b15"
+            }
+        },
+        "10c081b6-026b-58cc-ffff112233445566": {
+            "name": "Kitchen countertop",
+            "type": "LightControllerV2",
+            "uuidAction": "10c081b6-026b-58cc-ffff112233445566",
+            "room": "09fec58a-03cf-001b-0f00000000000000",
+            "cat": "09fec58a-03ce-0002-0d00000000000000",
+            "defaultRating": 1,
+            "isFavorite": false,
+            "isSecured": false,
+            "restrictions": 0,
+            "details": {
+                "jLockable": true,
+                "controlHistory": true,
+                "hasHistory": 20
+            },
+            "states": {
+                "jLocked": "90c081b6-026b-5892-ffff64a1ed715e1f",
+                "activeMoods": "1171133c-025d-1858-ffff504f941036f8",
+                "moodList": "1171133c-025d-1859-ffff504f941036f8",
+                "activeMoodsNum": "18ed78d1-0350-319c-ffff504f94a01299",
+                "favoriteMoods": "1171133c-025d-185a-ffff504f941036f8",
+                "additionalMoods": "1171133c-025d-185b-ffff504f941036f8",
+                "circuitNames": "16f52566-0221-dd85-ffff112233445566",
+                "daylightConfig": "19e67a08-037b-d0e9-ffff112233445566"
+            },
+            "subControls": {
+                "10c081b6-026b-58cc-ffff112233445566/AI1": {
+                    "name": "Kitchen countertop",
+                    "type": "Switch",
+                    "uuidAction": "10c081b6-026b-58cc-ffff112233445566/AI1",
+                    "defaultRating": 0,
+                    "isFavorite": false,
+                    "isSecured": false,
+                    "restrictions": 0,
+                    "states": {
+                        "active": "10c081b6-026b-58b5-ffff64a1ed715e1f"
+                    }
+                }
+            }
+        },
+        "10c081b6-026b-5863-ffff112233445566": {
+            "name": "Living room",
+            "type": "LightControllerV2",
+            "uuidAction": "10c081b6-026b-5863-ffff112233445566",
+            "room": "09fec58a-03cf-001b-0f00000000000000",
+            "cat": "09fec58a-03ce-0002-0d00000000000000",
+            "defaultRating": 1,
+            "isFavorite": true,
+            "isSecured": false,
+            "restrictions": 0,
+            "details": {
+                "jLockable": true,
+                "controlHistory": true,
+                "hasHistory": 20,
+                "movementScene": 1,
+                "masterValue": "10c081b6-026b-5863-ffff112233445566/masterValue"
+            },
+            "states": {
+                "jLocked": "90c081b6-026b-5829-ffff64a1ed715e1f",
+                "activeMoods": "1171133c-024d-1807-ffff504f941036f8",
+                "moodList": "1171133c-024d-1808-ffff504f941036f8",
+                "activeMoodsNum": "18ed78d1-034b-3150-ffff504f94a01299",
+                "favoriteMoods": "1171133c-024f-1809-ffff504f941036f8",
+                "additionalMoods": "1171133c-024f-180a-ffff504f941036f8",
+                "circuitNames": "16f52566-0220-dcff-ffff112233445566",
+                "daylightConfig": "19e67a08-037a-d05d-ffff112233445566"
+            },
+            "subControls": {
+                "10c081b6-026b-5863-ffff112233445566/masterValue": {
+                    "name": "Master Brightness",
+                    "type": "Dimmer",
+                    "uuidAction": "10c081b6-026b-5863-ffff112233445566/masterValue",
+                    "defaultRating": 0,
+                    "isFavorite": false,
+                    "isSecured": false,
+                    "restrictions": 0,
+                    "states": {
+                        "position": "10c081b6-026b-585f-ffff64a1ed715e1f",
+                        "min": "1171133c-024f-180c-ffff504f941036f8",
+                        "max": "1171133c-024f-180d-ffff504f941036f8",
+                        "step": "10c081b6-026b-583b-ffff64a1ed715e1f"
+                    }
+                },
+                "10c081b6-026b-5863-ffff112233445566/AI1": {
+                    "name": "Living",
+                    "type": "Dimmer",
+                    "uuidAction": "10c081b6-026b-5863-ffff112233445566/AI1",
+                    "defaultRating": 0,
+                    "isFavorite": false,
+                    "isSecured": false,
+                    "restrictions": 0,
+                    "states": {
+                        "position": "10c081b6-026b-584c-ffff64a1ed715e1f",
+                        "min": "10c081b6-026b-583d-ffff64a1ed715e1f",
+                        "max": "10c081b6-026b-583e-ffff64a1ed715e1f",
+                        "step": "10c081b6-026b-583b-ffff64a1ed715e1f"
+                    }
+                },
+                "10c081b6-026b-5863-ffff112233445566/AI2": {
+                    "name": "Kitchen",
+                    "type": "Switch",
+                    "uuidAction": "10c081b6-026b-5863-ffff112233445566/AI2",
+                    "defaultRating": 0,
+                    "isFavorite": false,
+                    "isSecured": false,
+                    "restrictions": 0,
+                    "states": {
+                        "active": "10c081b6-026b-584d-ffff64a1ed715e1f"
+                    }
+                }
+            }
+        },
+        "0ad31251-030a-c43a-ffff112233445566": {
+            "name": "Gate",
+            "type": "Gate",
+            "uuidAction": "0ad31251-030a-c43a-ffff112233445566",
+            "room": "09fec58a-03cf-0037-0f00000000000000",
+            "cat": "09fec58a-03cf-0010-0d00000000000000",
+            "defaultRating": 7,
+            "isFavorite": true,
+            "isSecured": false,
+            "restrictions": 0,
+            "details": {
+                "jLockable": true,
+                "animation": 1
+            },
+            "states": {
+                "jLocked": "8ad31251-030a-c42a-ffff112233445566",
+                "position": "0ad31251-030a-c438-ffff112233445566",
+                "active": "0ad31251-030a-c437-ffff112233445566",
+                "preventOpen": "0c77a2e1-0130-548e-ffff112233445566",
+                "preventClose": "0c77a2e1-0130-548f-ffff112233445566"
+            }
+        },
+        "0acbb406-02fb-598c-ffff112233445566": {
+            "name": "Garage",
+            "type": "Gate",
+            "uuidAction": "0acbb406-02fb-598c-ffff112233445566",
+            "room": "09fec58a-03cf-0023-0f00000000000000",
+            "cat": "09fec58a-03cf-0010-0d00000000000000",
+            "defaultRating": 7,
+            "isFavorite": true,
+            "isSecured": false,
+            "restrictions": 0,
+            "details": {
+                "jLockable": true,
+                "animation": 0
+            },
+            "states": {
+                "jLocked": "8acbb406-02fb-597c-ffff112233445566",
+                "position": "0acbb406-02fb-598a-ffff112233445566",
+                "active": "0acbb406-02fb-5989-ffff112233445566",
+                "preventOpen": "0c77a2e1-0130-5459-ffff112233445566",
+                "preventClose": "0c77a2e1-0130-545a-ffff112233445566"
+            }
+        },
+        "0c17799c-027a-f695-ffff112233445566": {
+            "name": "Boiler",
+            "type": "InfoOnlyAnalog",
+            "uuidAction": "0c17799c-027a-f695-ffff112233445566",
+            "room": "09fec58a-03cf-002a-0f00000000000000",
+            "cat": "09fec58a-03ce-0004-0d00000000000000",
+            "defaultRating": 0,
+            "isFavorite": false,
+            "isSecured": false,
+            "defaultIcon": "IconsFilled/thermometer.svg",
+            "restrictions": 0,
+            "details": {
+                "jLockable": false,
+                "format": "%.1f"
+            },
+            "states": {
+                "value": "0c17799c-027a-f695-ffff112233445566",
+                "error": "0c17799c-027a-f694-ffff370b139f84eb"
+            }
+        },
+        "0e5a38f0-0025-f772-ffff112233445566": {
+            "name": "Small gate",
+            "type": "Pushbutton",
+            "uuidAction": "0e5a38f0-0025-f772-ffff112233445566",
+            "room": "09fec58a-03cf-0037-0f00000000000000",
+            "cat": "09fec58a-03cf-0010-0d00000000000000",
+            "defaultRating": 4,
+            "isFavorite": false,
+            "isSecured": false,
+            "defaultIcon": "IconsFilled/door-open.svg",
+            "restrictions": 0,
+            "details": {
+                "jLockable": false,
+                "type": 71
+            },
+            "states": {
+                "active": "0e5a38f0-0025-f772-ffff112233445566"
             }
         }
     }

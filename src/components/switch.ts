@@ -6,13 +6,13 @@ import { OnOff, OnOffHandler } from '../capabilities/on-off';
 import { ComponentRaw } from '../config';
 import { ErrorType } from '../error';
 import { LoxoneRequest } from '../loxone-request';
-import { Component } from './component';
+import { Component, ComponentType } from './component';
 
 export class SwitchComponent extends Component implements OnOff {
     private on: boolean;
 
     constructor(rawComponent: ComponentRaw, loxoneRequest: LoxoneRequest, statesEvents: Subject<Component>) {
-        super(rawComponent, loxoneRequest, statesEvents);
+        super(rawComponent, ComponentType.SWITCH, loxoneRequest, statesEvents);
 
         this.loxoneRequest.getControlInformation(this.loxoneId).subscribe(light => {
             // Subscribe on active status update of the current switch

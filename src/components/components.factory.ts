@@ -8,6 +8,13 @@ import { LightComponent } from './light';
 import { SwitchComponent } from './switch';
 import { TemperatureComponent } from './temperature';
 import { AirCoolerComponent } from './air-cooler';
+import { Log } from '../log';
+import { LightComponentV2 } from './lightV2';
+import { BoilerComponent } from './boiler';
+import { GateComponent } from './gate';
+import { raw } from 'express';
+import { GarageComponent } from './garage';
+import { DoorWithAutoLockComponent } from './doorWithAutoLock';
 
 export class ComponentsFactory {
     private components: { [key: string]: Component } = {};
@@ -35,12 +42,29 @@ export class ComponentsFactory {
                         id: controlId,
                         loxoneType: control?.type,
                         name: control?.name,
-                        room: roomId ? body.rooms[roomId]?.name : 'Unknow',
-                        type: this.extractType(control?.type),
+                        room: roomId ? body.rooms[roomId]?.name : 'Unknow'
                     };
 
                     let component: Component;
                     switch (rawComponent.loxoneType) {
+                        case 'Pushbutton':
+                            component = new DoorWithAutoLockComponent(rawComponent, this.loxoneRequest, this.statesEvents);
+                            break;
+                        case 'Gate':
+                            if (rawComponent.name === 'Garage') {
+                                component = new GarageComponent(rawComponent, this.loxoneRequest, this.statesEvents);
+                                break;
+                            }
+                            component = new GateComponent(rawComponent, this.loxoneRequest, this.statesEvents);
+                            break;
+                        case 'InfoOnlyAnalog':
+                            if (rawComponent.name === 'Boiler') {
+                                component = new BoilerComponent(rawComponent, this.loxoneRequest, this.statesEvents);
+                            }
+                            break;
+                        case 'LightControllerV2':
+                            component = new LightComponentV2(rawComponent, this.loxoneRequest, this.statesEvents);
+                            break;
                         case 'Switch':
                             component = new SwitchComponent(rawComponent, this.loxoneRequest, this.statesEvents);
                             break;
@@ -65,7 +89,7 @@ export class ComponentsFactory {
 
                         default:
                             if (this.config.log) {
-                                console.log(`Type [${rawComponent.loxoneType}] not yet supported`);
+                                Log.info(`Type [${rawComponent.loxoneType}] not yet supported`);
                             }
                     }
 
@@ -82,24 +106,5 @@ export class ComponentsFactory {
 
     getComponent(): { [key: string]: Component } {
         return this.components;
-    }
-
-    private extractType(loxoneType: string): 'LIGHT' | 'THERMOSTAT' | 'BLINDS' | 'SWITCH' | 'SENSOR' | 'AIRCOOLER' {
-        switch (loxoneType) {
-            case 'Switch':
-                return 'LIGHT';
-            case 'EIBDimmer':
-                return 'LIGHT';
-            case 'Dimmer':
-                return 'LIGHT';
-            case 'Jalousie':
-                return 'BLINDS';
-            case 'IRoomControllerV2':
-                return 'THERMOSTAT';
-            case 'WindowMonitor':
-                return 'SENSOR';
-            case 'AcControl':
-                return 'AIRCOOLER';
-        }
     }
 }

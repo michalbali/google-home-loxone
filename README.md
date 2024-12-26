@@ -17,6 +17,8 @@ We suggest to use the free oauth 2.0 server : OAuth0
 1. Create an account or login
 1. Create a new application (Eg : Google Home)
 1. In **Allowed Callback URLs** section, add https://oauth-redirect.googleusercontent.com/r/YOUR_GOOGLE_PROJECTNAME
+1. Create new API (Eg : Google Home API)
+1. Edit Application, got to APIs tab and enable Google Home API (set Authorized switch to on)
 
 ### Create an Actions on Google developer project
 
@@ -72,8 +74,9 @@ Create a config.json file (usually in ~/.google-home-loxone) to allow the plugin
     "password": "LOXONE_PASSWORD" // Your loxone password
   },
   "oAuthUrl": "https://rtrompier.eu.auth0.com", // Your oAuthUrl provided by Oauth0
-  "authorizedEmails": [
-    "remy.trompier@gmail.com" // The emails of the users will be allowed to call your server
+  "audience": "google-home-loxone-integration-api-1234", //Auth0 API Identifier
+  "authorizedSubjects": [
+    "auth0|111111111111111111111111" // The Auth0 user_id of users that will be allowed to call your server
   ],
   "agentUserId": "loxone-12345", // The name of your app
   "log": true // Activate verbose mode

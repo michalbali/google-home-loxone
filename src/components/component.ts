@@ -4,7 +4,20 @@ import { CapabilityHandler } from '../capabilities/capability-handler';
 import { EndpointHealth, EndpointHealthHandler } from '../capabilities/endpoint-health';
 import { ComponentRaw } from '../config';
 import { LoxoneRequest } from '../loxone-request';
+import { Log } from '../log';
 
+export enum ComponentType {
+    LIGHT = 'LIGHT',
+    THERMOSTAT = 'THERMOSTAT',
+    BLINDS = 'BLINDS',
+    SWITCH = 'SWITCH',
+    SENSOR = 'SENSOR',
+    AIRCOOLER = 'AIRCOOLER',
+    BOILER = 'BOILER',
+    GATE = 'GATE',
+    GARAGE = 'GARAGE',
+    DOOR = 'DOOR',
+}
 
 export abstract class Component implements EndpointHealth {
     protected readonly loxoneRequest: LoxoneRequest;
@@ -12,18 +25,20 @@ export abstract class Component implements EndpointHealth {
     public readonly id: string;
     public readonly loxoneId: string;
     public readonly name: string;
-    public readonly type: string;
+    public readonly type: ComponentType;
     public readonly room: string;
     protected readonly statesEvents: Subject<Component>;
 
-    protected constructor(rawComponent: ComponentRaw, loxoneRequest: LoxoneRequest, statesEvents: Subject<Component>) {
+    protected constructor(rawComponent: ComponentRaw, type: ComponentType, loxoneRequest: LoxoneRequest, statesEvents: Subject<Component>) {
         this.loxoneRequest = loxoneRequest;
         this.id = rawComponent.id;
         this.name = rawComponent.name;
-        this.type = rawComponent.type;
+        this.type = type;
         this.room = rawComponent.room;
         this.loxoneId = rawComponent.id;
         this.statesEvents = statesEvents;
+
+        Log.info("Component created", this.id, this.name, this.type, this.room);
     }
 
     public abstract getCapabilities(): CapabilityHandler<any>[];

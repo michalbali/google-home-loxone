@@ -1,5 +1,6 @@
-import { Observable, of } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 import { Capability, CapabilityHandler } from './capability-handler';
+import { Log } from '../log';
 
 export interface TemperatureControl extends Capability {
   getTemperature(): Observable<any>;
@@ -10,31 +11,37 @@ export class TemperatureControlHandler implements CapabilityHandler<TemperatureC
 
   getCommands(): string[] {
     return [
-      'action.devices.commands.TemperatureSetting'
+      'action.devices.commands.SetTemperature'
     ];
   }
 
   getAttributes(component: TemperatureControl): any {
     return {
-      'thermostatTemperatureRange': {
-        'minThresholdCelsius': 30,
+      'temperatureRange': {
+        'minThresholdCelsius': 1,
         'maxThresholdCelsius': 100
       },
-      'temperatureStepCelsius': 1,
-      'thermostatTemperatureUnit': 'C'
+      'temperatureStepCelsius': 0.1,
+      'temperatureUnitForUX': 'C',
+      'queryOnlyTemperatureControl': true
     }
   }
 
   getState(component: TemperatureControl): Observable<any> {
-    return component.getTemperature();
+    //component.getTemperature().subscribe(result => Log.info('TemperatureControlHandler.getState ', result));
+    return component.getTemperature().pipe(map(result => {
+      return {
+        temperatureAmbientCelsius: result
+      }
+    }));
   }
 
   getTrait(): string {
-    return 'action.devices.traits.TemperatureSetting';
+    return 'action.devices.traits.TemperatureControl';
   }
 
   handleCommands(component: TemperatureControl, command: string, payload?: any): Observable<boolean> {
-    console.log('No TemperatureComponent control handle');
+    Log.info('No TemperatureComponent control handle');
     return of(true);
   }
 }

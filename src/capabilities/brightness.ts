@@ -1,6 +1,7 @@
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Capability, CapabilityHandler } from './capability-handler';
+import { Log } from '../log';
 
 export interface Brightness extends Capability {
   setBrightness(value: number): Observable<boolean>;
@@ -37,7 +38,7 @@ export class BrightnessHandler implements CapabilityHandler<Brightness> {
     if (payload['brightness']) {
       return component.setBrightness(+payload['brightness']);
     } else {
-      console.error('Error during setting brightness', component, payload);
+      Log.error('Error during setting brightness', component, payload);
       of(false);
     }
   }

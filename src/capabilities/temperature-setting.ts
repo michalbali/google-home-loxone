@@ -38,7 +38,7 @@ export class TemperatureSettingHandler implements CapabilityHandler<TemperatureS
     return 'action.devices.traits.TemperatureSetting';
   }
 
-  getAttributes(component: TemperatureControl): any {
+  getAttributes(component: TemperatureSetting): any {
     return {
       'availableThermostatModes': 'off,on,heat,cool,heatcool,auto,dry,fan-only',
       'thermostatTemperatureUnit': 'C'

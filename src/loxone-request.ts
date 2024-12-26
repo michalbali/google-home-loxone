@@ -2,6 +2,7 @@ import { Axios } from 'axios-observable';
 import { Observable, of, Subject } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Config } from './config';
+import { Log } from './log';
 
 const LoxoneWebSocket = require('node-lox-ws-api');
 
@@ -28,20 +29,26 @@ export class LoxoneRequest {
     }
 
     connect() {
+        Log.info("Calling WS socket connect");
         this.socket.connect();
         
+        // this.socket.on(`update_event_value`, (event) => {
+        //     Log.info('update_event_value:', JSON.stringify(event, null, 2));
+        // });
+
         this.socket.on('connect_failed', () => {
-            console.error('Connection to Loxone failed');
+            Log.error('Connection to Loxone failed');
         });
         
         this.socket.on('connection_error', () => {
-            console.error('Connection to Loxone errored');
+            Log.error('Connection to Loxone errored');
         });
 
         this.socket.on('close', (info, reason) => {
-            console.error('Connection to Loxone closed', info, reason);
+            Log.error('Connection to Loxone closed', info, reason);
         });
 
+        //listen for command responses
         this.socket.on('message_text', (message) => {
             for (let index = this.commandChain.length - 1; index >= 0; index--) {
                 const item = this.commandChain[index];
@@ -57,7 +64,7 @@ export class LoxoneRequest {
     sync(): Observable<any> {
         const url = `${this.config.loxone.protocol}://${this.config.loxone.url}/data/LoxApp3.json`;
         if (this.config.log) {
-            console.log('Loxone autodiscover on ', url);
+            Log.info('Loxone autodiscover on ', url);
         }
 
         return Axios.post(url, null, {
@@ -68,7 +75,7 @@ export class LoxoneRequest {
         }).pipe(
             map((resp) => resp.data),
             catchError(err => {
-                console.error('Error while requesting Loxone component', err);
+                Log.error('Error while requesting Loxone component', err);
                 throw 'Error while requesting Loxone component';
             })
         );
@@ -79,6 +86,18 @@ export class LoxoneRequest {
 
         this.socket.on(`update_event_value_${uuid}`, (state) => {
             events.next(state);
+        });
+
+        return events;
+    }
+
+    watchComponentText(uuid: string): Observable<any> {
+        const events = new Subject<any>();
+
+        this.socket.on('update_event_text', (eventUuid, state) => {
+            if (uuid === eventUuid) {
+                events.next(state);
+            }
         });
 
         return events;
@@ -100,23 +119,41 @@ export class LoxoneRequest {
         this.commandChain.push({
             'control': `dev/sps/io/${uuidAction}/${state}`,
             'callback': (result) => {
+                if (this.config.log) {
+                    Log.info("Loxone Response: ", JSON.stringify(result));
+                }
                 events.next(result);
                 events.complete();
             }
         });
 
         if (this.config.log) {
-            console.log(`WS: Send Cmd: ${commandEdited}`);
+            Log.info("Loxone Request:", commandEdited);
         }
         this.socket.send_command(commandEdited, false);
 
+        this.postProcessHook(commandEdited);
+
         return events;
+    }
+
+    private postProcessHook(command: string) {
+        if (this.config.postProcessHooks === undefined) {
+            return;
+        }
+
+        if (this.config.postProcessHooks[command] === undefined) {
+            return;
+        }
+
+        Log.info(`Post process hook detected for ${command} sending ${this.config.postProcessHooks[command]}`);
+        this.socket.send_command(this.config.postProcessHooks[command], false);
     }
 
     getControlInformation(uuid: string): Observable<any> {
         return this.getStructureFile().pipe(map(structure => {
             if (structure['controls'][uuid] === undefined) {
-                console.warn(`This component ${uuid} don\'t exist in Loxone`);
+                Log.warn(`This component ${uuid} don\'t exist in Loxone`);
                 return;
             }
             return structure['controls'][uuid];
@@ -128,5 +165,10 @@ export class LoxoneRequest {
             return of(this.structureFile);
         }
         return this.structureSubject;
+    }
+
+    //emit method only for testing
+    private emit(event: string, ...args: any[]) {
+        this.socket.emit(event, ...args);
     }
 }

@@ -1,7 +1,6 @@
 export class ComponentRaw {
     public id: string;
     public loxoneId?: string;
-    public type: 'LIGHT' | 'THERMOSTAT' | 'BLINDS' | 'SWITCH' | 'SENSOR' | 'AIRCOOLER';
     public loxoneType: string;
     public name: string;
     public room: string;
@@ -19,9 +18,14 @@ export class Config {
     public serverPort: string;
     public loxone: LoxoneConfig;
     public components: ComponentRaw[];
-    public authorizedEmails: string[];
+    public authorizedSubjects: string[];
     public oAuthUrl: string;
+    public audience: string;
     public log: boolean;
     public testMode: boolean;
     public agentUserId: string;
+
+    public postProcessHooks: {
+        [trigger: string]: string;
+    };
 }

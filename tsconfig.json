@@ -3,7 +3,7 @@
     "typeRoots": [
       "./node_modules/@types"
     ],
-    "target": "es5",
+    "target": "es2015",
     "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,

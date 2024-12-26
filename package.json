@@ -7,10 +7,12 @@
         "google-home-loxone": "bin/global.js"
     },
     "dependencies": {
+        "@googleapis/homegraph": "^4.0.9",
         "axios-observable": "^2.0.0",
+        "chalk": "^4.1.2",
         "express": "^4.18.2",
-        "googleapis": "^109.0.1",
-        "mock-socket": "^9.2.1",
+        "express-jwt": "^8.5.1",
+        "jwks-rsa": "^3.1.0",
         "node-lox-ws-api": "^0.4.5",
         "rxjs": "^7.5.7",
         "uuid": "^9.0.0",

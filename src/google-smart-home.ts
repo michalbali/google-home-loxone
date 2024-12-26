@@ -1,4 +1,4 @@
-import { google } from 'googleapis';
+import { homegraph_v1, auth } from '@googleapis/homegraph';
 import {
     SmartHomeV1ExecuteErrors,
     SmartHomeV1ExecuteRequestCommands,
@@ -13,11 +13,12 @@ import {
 import { Request } from 'express-serve-static-core';
 import { from, interval, Observable, of } from 'rxjs';
 import { buffer, catchError, filter, map, mergeMap, tap, toArray } from 'rxjs/operators';
-import { Auth0 } from './auth';
 import { Handlers } from './capabilities/capability-handler';
 import { Component } from './components/component';
 import { ComponentsFactory } from './components/components.factory';
 import { Config } from './config';
+import { Log } from './log';
+import { ErrorType } from './error';
 
 const uuid = require('uuid');
 
@@ -25,17 +26,15 @@ export class GoogleSmartHome {
     private readonly config: Config;
     private readonly jwtConfig: string;
     private readonly jwtPath: string;
-    private readonly auth: Auth0;
     private readonly components: ComponentsFactory;
     private readonly statesEvents: Observable<Component>;
     private readonly handlers: Handlers;
 
-    constructor(config: Config, components: ComponentsFactory, auth: Auth0, statesEvents: Observable<Component>, jwtConfig: string, jwtPath: string) {
+    constructor(config: Config, components: ComponentsFactory, statesEvents: Observable<Component>, jwtConfig: string, jwtPath: string) {
 
         this.config = config;
         this.jwtConfig = jwtConfig;
         this.jwtPath = jwtPath;
-        this.auth = auth;
         this.handlers = new Handlers();
         this.components = components;
         this.statesEvents = statesEvents;
@@ -47,17 +46,23 @@ export class GoogleSmartHome {
             .pipe(
                 tap(async () => {
                     // Init Homegraph API
-                    const auth = new google.auth.GoogleAuth({ keyFile: this.jwtPath, scopes: ['https://www.googleapis.com/auth/homegraph'] });
-                    const client = await auth.getClient();
-                    const homegraph = google.homegraph({ version: 'v1', auth: client });
+                    const gAuth = new auth.GoogleAuth({ keyFile: this.jwtPath, scopes: ['https://www.googleapis.com/auth/homegraph'] });
+                    const homegraph = new homegraph_v1.Homegraph({ apiVersion: 'v1', auth: gAuth });
                     if (!this.config.testMode) {
+                        const requestBody = { agentUserId: this.config.agentUserId, async: true };
+                        Log.info("Calling requestSync:", JSON.stringify(requestBody));
                         // Using this call synchronously seem fail (Err 500 from Google API).
-                        await homegraph.devices.requestSync({ requestBody: { agentUserId: this.config.agentUserId, async: true } });
+                        await homegraph.devices.requestSync({ requestBody });
                     }
 
                     // Listening for loxone devices events
                     this.subscribeStates(this.statesEvents).subscribe({
-                        next: (states) => homegraph.devices.reportStateAndNotification({ requestBody: states })
+                        next: (states) => {
+                            Log.info('Reporting states:', JSON.stringify(states?.payload?.devices?.states));
+                            if (!this.config.testMode) {
+                                homegraph.devices.reportStateAndNotification({ requestBody: states })
+                            }
+                        }
                     });
                 })
             );
@@ -95,51 +100,35 @@ export class GoogleSmartHome {
     }
 
     handler(data: any, request: Request): Observable<any> {
-        const authToken = this.auth.checkToken(request);
+        const input = data.inputs[0];
+        const intent = input.intent;
 
-        return authToken.pipe(
-            mergeMap(registered => {
-                if (!registered) {
-                    return of({
-                        errorCode: 'authFailure'
-                    })
-                }
-
-                const input = data.inputs[0];
-                const intent = input.intent;
-
-                if (!intent) {
-                    return of({
-                        errorCode: 'notSupported'
-                    })
-                }
-
-                switch (intent) {
-                    case 'action.devices.SYNC':
-                        console.log('post /smarthome SYNC');
-                        return this.sync(data.requestId);
-                    case 'action.devices.QUERY':
-                        console.log('post /smarthome QUERY');
-                        return this.query(input.payload, data.requestId);
-                    case 'action.devices.EXECUTE':
-                        console.log('post /smarthome EXECUTE');
-                        return this.exec(input.payload, data.requestId);
-                    case 'action.devices.DISCONNECT':
-                        // TODO
-                        return of({});
-                    default:
-                        return of({
-                            errorCode: 'notSupported'
-                        });
-                }
+        if (!intent) {
+            return of({
+                errorCode: 'notSupported'
             })
-        );
+        }
+
+        switch (intent) {
+            case 'action.devices.SYNC':
+                return this.sync(data.requestId);
+            case 'action.devices.QUERY':
+                return this.query(input.payload, data.requestId);
+            case 'action.devices.EXECUTE':
+                return this.exec(input.payload, data.requestId);
+            case 'action.devices.DISCONNECT':
+                // TODO
+                return of({});
+            default:
+                return of({
+                    errorCode: 'notSupported'
+                });
+        }
     }
 
     sync(requestId: string): Observable<SmartHomeV1SyncResponse> {
         const devices = Object.values(this.components.getComponent())
             .map(component => component.getSync());
-        console.log('start sync request');
 
         return of({
             requestId: requestId,
@@ -182,6 +171,10 @@ export class GoogleSmartHome {
                         acc[cur['id']] = {
                             'errorCode': cur['errorCode']
                         }
+                    } 
+                    //else if no status is returned, we assume it's a success
+                    else if (!acc[cur['id']].status) {
+                        acc[cur['id']].status = 'SUCCESS' as SmartHomeV1ExecuteStatus                        
                     }
                     return acc;
                 }, {});
@@ -226,36 +219,51 @@ export class GoogleSmartHome {
 
                 const component = this.components.getComponent()[device.id];
                 if (this.config.log) {
-                    console.log('Component found');
+                    Log.info('Component found');
                 }
 
                 // Now execute all command into the device
                 return from(command.execution).pipe(
                     mergeMap(execution => {
                         const componentHandler = this.handlers.getHandler(execution.command);
-
+                
                         if (componentHandler === undefined) {
-                            // If we can't found the device, return false
-                            return of(false)
+                            // If we can't found the device, return ERROR
+                            return of(CommandResult.ERROR);
                         }
-
-                        return componentHandler.handleCommands(component, execution.command, execution.params);
+                
+                        return componentHandler.handleCommands(component, execution.command, execution.params, execution.challenge).pipe(
+                            map(result => result ? CommandResult.SUCCESS : CommandResult.ERROR)                            
+                        );
                     }),
                     catchError((err) => {
-                        // TODO Make this better
-                        console.error('ERROR', err);
-                        return of(false);
+                        if (err.message === ErrorType.CHALLENGE_NEEDED_ACK) {
+                            return of(CommandResult.ERROR_NEED_ACK);
+                        } else {
+                            Log.error('ERROR', err);
+                            return of(CommandResult.ERROR);
+                        }
                     }),
-                    mergeMap((succeed: boolean) => {
-                        // Can't find the handler, return not supported
-                        if (!succeed) {
+                    mergeMap((result: CommandResult) => {
+                        if (result === CommandResult.ERROR_NEED_ACK) {
+                            return of({
+                                ids: [device.id],
+                                status: 'ERROR' as SmartHomeV1ExecuteStatus,
+                                errorCode: 'challengeNeeded' as SmartHomeV1ExecuteErrors,
+                                challengeNeeded: {
+                                    type: 'ackNeeded'
+                                }
+                            } as SmartHomeV1ExecuteResponseCommands);
+                        }
+                
+                        if (result === CommandResult.ERROR) {
                             return of({
                                 ids: [device.id],
                                 status: 'ERROR' as SmartHomeV1ExecuteStatus,
                                 errorCode: 'notSupported' as SmartHomeV1ExecuteErrors
                             } as SmartHomeV1ExecuteResponseCommands);
                         }
-
+                
                         // Call state on component and merge them
                         return component.getStates().pipe(
                             map(states => {
@@ -271,4 +279,10 @@ export class GoogleSmartHome {
             })
         )
     }
+}
+
+enum CommandResult {
+    SUCCESS,
+    ERROR,
+    ERROR_NEED_ACK
 }

@@ -6,8 +6,8 @@
         "password": "my_pass"
     },
     "oAuthUrl": "https://xcid.eu.auth0.com",
-    "authorizedEmails": [
-        "user@xcid.fr"
+    "authorizedSubjects": [
+        "auth0|111111111111111111111111"
     ],
     "agentUserId": "loxone-12345",
     "testMode": true,

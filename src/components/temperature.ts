@@ -3,13 +3,14 @@ import { CapabilityHandler } from '../capabilities/capability-handler';
 import { TemperatureSetting, TemperatureSettingHandler, TemperatureState } from '../capabilities/temperature-setting';
 import { ComponentRaw } from '../config';
 import { LoxoneRequest } from '../loxone-request';
-import { Component } from './component';
+import { Component, ComponentType } from './component';
+import { Log } from '../log';
 
 export class TemperatureComponent extends Component implements TemperatureSetting {
   protected temperatureState: TemperatureState = new TemperatureState();
 
   constructor(rawComponent: ComponentRaw, loxoneRequest: LoxoneRequest, statesEvents: Subject<Component>) {
-    super(rawComponent, loxoneRequest, statesEvents);
+    super(rawComponent, ComponentType.THERMOSTAT, loxoneRequest, statesEvents);
 
     this.loxoneRequest.getControlInformation(this.loxoneId).subscribe(temperature => {
       // Subscribe on active status update of the current switch
@@ -44,13 +45,13 @@ export class TemperatureComponent extends Component implements TemperatureSettin
 
   setTemperature(temp: number): Observable<boolean> {
     // TODO: Implement
-    console.log('No TemperatureComponent control handle');
+    Log.info('No TemperatureComponent control handle');
     return of(true);
   }
 
   setMode(mode: string): Observable<boolean> {
     // TODO: Implement
-    console.log('No TemperatureComponent control handle');
+    Log.info('No TemperatureComponent control handle');
     return of(true);
   }
 }
